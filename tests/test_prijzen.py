@@ -1,5 +1,5 @@
 import unittest
-from prijzen import BTW_TARIEVEN, btw_bedrag, met_btw, met_korting, zonder_btw
+from prijzen import BTW_TARIEVEN, btw_bedrag, contant_afronden, met_btw, met_korting, zonder_btw
 
 
 class PrijzenTest(unittest.TestCase):
@@ -74,6 +74,25 @@ class KortingTest(unittest.TestCase):
                 with self.assertRaises(ValueError) as ctx:
                     met_korting(bedrag, procent)
                 self.assertTrue(str(ctx.exception))
+
+
+class ContantAfrondenTest(unittest.TestCase):
+    def test_voorbeelden(self):
+        verwacht = {1000: 1000, 1001: 1000, 1002: 1000, 1003: 1005, 1004: 1005,
+                    1005: 1005, 1006: 1005, 1007: 1005, 1008: 1010, 1009: 1010, 0: 0}
+        for bedrag, uitkomst in verwacht.items():
+            with self.subTest(bedrag=bedrag):
+                self.assertEqual(contant_afronden(bedrag), uitkomst)
+
+    def test_negatief_geweigerd(self):
+        with self.assertRaises(ValueError):
+            contant_afronden(-1)
+
+    def test_geen_geheel_getal_geweigerd(self):
+        for waarde in (10.5, 10.0, "10", None, True):
+            with self.subTest(waarde=waarde):
+                with self.assertRaises(ValueError):
+                    contant_afronden(waarde)
 
 
 if __name__ == "__main__":

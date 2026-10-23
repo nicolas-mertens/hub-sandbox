@@ -23,6 +23,12 @@
 - Tests in `tests/test_prijzen.py` (`KortingTest`).
 - Openstaand: niets.
 
+## Contant afronden op 5 cent
+- `contant_afronden(bedrag_centen)` toegevoegd in `prijzen.py`: `(bedrag + 2) // 5 * 5` (rest 1,2 omlaag; 3,4 omhoog).
+- Negatief bedrag of geen `int` (ook geen `float` of `bool`) geeft een `ValueError` met Nederlandse melding.
+- Tests in `tests/test_prijzen.py` (`ContantAfrondenTest`).
+- Openstaand: niets.
+
 ## Factuurtotaal over meerdere regels
 - `factuurtotaal(regels)` toegevoegd in `weergave.py`: elke regel via `factuurregel`, daaronder `Totaal: <incl. btw> (waarvan btw <btw>)`. Totalen zijn de som van `met_btw` en `btw_bedrag` per regel (hele centen, dus consistent met de getoonde regels).
 - Lege lijst geeft een `ValueError` ("een factuur heeft minstens één regel nodig"); onbekend tarief of negatief bedrag geeft de `ValueError` uit `prijzen.py`.

@@ -41,3 +41,12 @@ def met_korting(bedrag_centen: int, procent: int) -> int:
     if not 0 <= procent <= 100:
         raise ValueError("korting moet tussen 0 en 100 procent liggen")
     return (bedrag_centen * (100 - procent) + 50) // 100
+
+
+def contant_afronden(bedrag_centen: int) -> int:
+    """Bedrag afgerond op een veelvoud van 5 cent, zoals bij contante betaling."""
+    if isinstance(bedrag_centen, bool) or not isinstance(bedrag_centen, int):
+        raise ValueError("bedrag moet een geheel getal zijn")
+    if bedrag_centen < 0:
+        raise ValueError("bedrag mag niet negatief zijn")
+    return (bedrag_centen + 2) // 5 * 5
