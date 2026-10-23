@@ -1,5 +1,5 @@
 import unittest
-from weergave import euro, factuurregel, factuurtotaal
+from weergave import euro, factuurregel, factuurtotaal, factuurtotaal_contant
 
 
 class WeergaveTest(unittest.TestCase):
@@ -91,6 +91,41 @@ class FactuurtotaalTest(unittest.TestCase):
     def test_negatief_bedrag(self):
         with self.assertRaisesRegex(ValueError, "negatief"):
             factuurtotaal([("Les", 5000, "standaard"), ("Fout", -1, "nul")])
+
+
+class FactuurtotaalContantTest(unittest.TestCase):
+    def test_eindigt_op_totaal_en_contant(self):
+        tekst = factuurtotaal_contant(
+            [("Knippen", 2479, "standaard"), ("Shampoo", 899, "verlaagd")]
+        )
+        self.assertEqual(
+            tekst.split("\n")[-2:],
+            ["Totaal: € 39,53 (waarvan btw € 5,75)", "Contant te betalen: € 39,55"],
+        )
+
+    def test_begint_met_dezelfde_tekst_als_factuurtotaal(self):
+        regels = [("Knippen", 2479, "standaard"), ("Shampoo", 899, "verlaagd")]
+        self.assertTrue(
+            factuurtotaal_contant(regels).startswith(factuurtotaal(regels) + "\n")
+        )
+
+    def test_totaal_op_nul_of_vijf_blijft_gelijk(self):
+        tekst = factuurtotaal_contant([("Knippen", 2479, "standaard")])
+        self.assertEqual(
+            tekst.split("\n")[-2:],
+            ["Totaal: € 30,00 (waarvan btw € 5,21)", "Contant te betalen: € 30,00"],
+        )
+
+    def test_lege_lijst(self):
+        with self.assertRaises(ValueError) as fout:
+            factuurtotaal_contant([])
+        with self.assertRaises(ValueError) as verwacht:
+            factuurtotaal([])
+        self.assertEqual(str(fout.exception), str(verwacht.exception))
+
+    def test_generator_als_invoer(self):
+        tekst = factuurtotaal_contant(r for r in [("Knippen", 2479, "standaard")])
+        self.assertTrue(tekst.endswith("Contant te betalen: € 30,00"))
 
 
 if __name__ == "__main__":

@@ -1,4 +1,4 @@
-from prijzen import BTW_TARIEVEN, btw_bedrag, met_btw
+from prijzen import BTW_TARIEVEN, btw_bedrag, contant_afronden, met_btw
 
 
 def euro(bedrag_centen):
@@ -31,3 +31,11 @@ def factuurtotaal(regels):
     btw = sum(btw_bedrag(bedrag, tarief) for _, bedrag, tarief in regels)
     tekst.append(f"Totaal: {euro(totaal)} (waarvan btw {euro(btw)})")
     return "\n".join(tekst)
+
+
+def factuurtotaal_contant(regels):
+    """Het factuurtotaal, met daaronder het contant te betalen bedrag (afgerond op 5 cent)."""
+    regels = list(regels)
+    tekst = factuurtotaal(regels)
+    totaal = sum(met_btw(bedrag, tarief) for _, bedrag, tarief in regels)
+    return f"{tekst}\nContant te betalen: {euro(contant_afronden(totaal))}"
