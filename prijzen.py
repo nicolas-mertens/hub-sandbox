@@ -3,6 +3,15 @@
 BTW_TARIEVEN = {"standaard": 21, "verlaagd": 6, "nul": 0}
 
 
+def contant_afronden(bedrag_centen: int) -> int:
+    """Rond een niet-negatief bedrag in hele centen af op vijf cent."""
+    if isinstance(bedrag_centen, bool) or not isinstance(bedrag_centen, int):
+        raise ValueError("bedrag moet een geheel getal zijn")
+    if bedrag_centen < 0:
+        raise ValueError("bedrag mag niet negatief zijn")
+    return ((bedrag_centen + 2) // 5) * 5
+
+
 def _percentage(tarief: str) -> int:
     try:
         return BTW_TARIEVEN[tarief]
