@@ -35,3 +35,9 @@
 - Lege lijst geeft een `ValueError` ("een factuur heeft minstens één regel nodig"); onbekend tarief of negatief bedrag geeft de `ValueError` uit `prijzen.py`.
 - Tests in `tests/test_weergave.py` (`FactuurtotaalTest`).
 - Openstaand: niets.
+
+## Contant te betalen op de factuur
+- `factuurtotaal_contant(regels)` toegevoegd in `weergave.py`: de tekst van `factuurtotaal(regels)` plus `Contant te betalen: € …`, het totaal incl. btw afgerond met `contant_afronden`. `factuurtotaal` zelf is ongewijzigd.
+- Lege lijst geeft dezelfde `ValueError` als `factuurtotaal` (die wordt eerst aangeroepen); ook een generator als invoer werkt.
+- Tests in `tests/test_weergave.py` (`FactuurtotaalContantTest`).
+- Openstaand: niets.
