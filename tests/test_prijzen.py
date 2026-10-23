@@ -1,5 +1,5 @@
 import unittest
-from prijzen import BTW_TARIEVEN, btw_bedrag, met_btw, zonder_btw
+from prijzen import BTW_TARIEVEN, btw_bedrag, met_btw, met_korting, zonder_btw
 
 
 class PrijzenTest(unittest.TestCase):
@@ -56,6 +56,24 @@ class PrijzenTest(unittest.TestCase):
                 functie(100, "luxe")
             for tarief in BTW_TARIEVEN:
                 self.assertIn(tarief, str(ctx.exception))
+
+
+class KortingTest(unittest.TestCase):
+    def test_voorbeelden(self):
+        self.assertEqual(met_korting(10000, 10), 9000)
+        self.assertEqual(met_korting(999, 15), 849)  # 849,15 -> 849
+        self.assertEqual(met_korting(1001, 50), 501)  # 500,5 -> 501
+
+    def test_grenzen(self):
+        self.assertEqual(met_korting(10000, 0), 10000)
+        self.assertEqual(met_korting(10000, 100), 0)
+
+    def test_ongeldige_invoer(self):
+        for bedrag, procent in [(-1, 10), (100, -1), (100, 101), (100, 10.5), (100, 10.0), (100, "10"), (100, True)]:
+            with self.subTest(bedrag=bedrag, procent=procent):
+                with self.assertRaises(ValueError) as ctx:
+                    met_korting(bedrag, procent)
+                self.assertTrue(str(ctx.exception))
 
 
 if __name__ == "__main__":

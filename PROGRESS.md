@@ -16,3 +16,9 @@
 - Negatief bedrag of onbekend tarief geeft de `ValueError` uit `prijzen.py` (niet opgevangen); lege omschrijving (ook alleen spaties) geeft een `ValueError` ("omschrijving mag niet leeg zijn").
 - Tests in `tests/test_weergave.py`.
 - Openstaand: niets.
+
+## Korting toepassen
+- `met_korting(bedrag_centen, procent)` toegevoegd in `prijzen.py`: `(bedrag * (100 - procent) + 50) // 100`, dezelfde afronding (halve centen omhoog) als de btw-functies.
+- Negatief bedrag, korting buiten 0..100 of geen `int` (ook geen `float` of `bool`) geeft een `ValueError` met Nederlandse melding.
+- Tests in `tests/test_prijzen.py` (`KortingTest`).
+- Openstaand: niets.
