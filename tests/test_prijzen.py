@@ -1,5 +1,5 @@
 import unittest
-from prijzen import BTW_TARIEVEN, btw_bedrag, met_btw, met_korting, zonder_btw
+from prijzen import BTW_TARIEVEN, btw_bedrag, contant_afronden, met_btw, met_korting, zonder_btw
 
 
 class PrijzenTest(unittest.TestCase):
@@ -74,6 +74,30 @@ class KortingTest(unittest.TestCase):
                 with self.assertRaises(ValueError) as ctx:
                     met_korting(bedrag, procent)
                 self.assertTrue(str(ctx.exception))
+
+
+class ContantAfrondenTest(unittest.TestCase):
+    def test_alle_eindcijfers(self):
+        for bedrag, verwacht in enumerate(
+            [1000, 1000, 1000, 1005, 1005, 1005, 1005, 1005, 1010, 1010],
+            start=1000,
+        ):
+            with self.subTest(bedrag=bedrag):
+                self.assertEqual(contant_afronden(bedrag), verwacht)
+
+    def test_nul_en_grote_gehele_bedragen(self):
+        self.assertEqual(contant_afronden(0), 0)
+        self.assertEqual(contant_afronden(10**30 + 3), 10**30 + 5)
+
+    def test_negatief_geweigerd(self):
+        with self.assertRaisesRegex(ValueError, "bedrag mag niet negatief zijn"):
+            contant_afronden(-1)
+
+    def test_niet_gehele_getallen_geweigerd(self):
+        for bedrag in (1.5, 10.0, "1000", None, True, False, [], complex(1, 0)):
+            with self.subTest(bedrag=bedrag):
+                with self.assertRaisesRegex(ValueError, "bedrag moet een geheel getal zijn"):
+                    contant_afronden(bedrag)
 
 
 if __name__ == "__main__":

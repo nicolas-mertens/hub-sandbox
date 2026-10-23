@@ -1,5 +1,12 @@
 # Progress
 
+## Contant afronden op 5 cent
+- `contant_afronden(bedrag_centen)` toegevoegd in `prijzen.py`, met gehele berekening naar het dichtstbijzijnde veelvoud van vijf cent.
+- Negatieve bedragen en niet-gehele waarden (ook `float` en `bool`) geven een `ValueError` met Nederlandse melding.
+- Tests in `tests/test_prijzen.py` voor alle eindcijfers, nul, grote bedragen en ongeldige invoer. Eerst rood bevestigd doordat de functie ontbrak.
+- Validatie: `python3 -m unittest discover -s tests -t .`; alle 37 tests groen.
+- Openstaand: niets.
+
 ## Bedrag in euro tonen
 - `weergave.py` met `euro(bedrag_centen)` toegevoegd (Belgische notatie).
 - Tests in `tests/test_weergave.py`; `prijzen.py` onaangeroerd.
