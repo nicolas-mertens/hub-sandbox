@@ -30,3 +30,14 @@ def zonder_btw(bedrag_centen: int, tarief: str = "standaard") -> int:
 def btw_bedrag(bedrag_centen: int, tarief: str = "standaard") -> int:
     """Btw-bedrag in hele centen; altijd bedrag + btw_bedrag == met_btw."""
     return met_btw(bedrag_centen, tarief) - bedrag_centen
+
+
+def met_korting(bedrag_centen: int, procent: int) -> int:
+    """Bedrag na korting, in hele centen, afgerond volgens de gewone regel."""
+    if bedrag_centen < 0:
+        raise ValueError("bedrag mag niet negatief zijn")
+    if isinstance(procent, bool) or not isinstance(procent, int):
+        raise ValueError("korting moet een geheel getal zijn")
+    if not 0 <= procent <= 100:
+        raise ValueError("korting moet tussen 0 en 100 procent liggen")
+    return (bedrag_centen * (100 - procent) + 50) // 100
