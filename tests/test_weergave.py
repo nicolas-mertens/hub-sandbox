@@ -80,6 +80,18 @@ class FactuurtotaalTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "onbekend btw-tarief"):
             factuurtotaal([("Les", 5000, "luxe")])
 
+    def test_afronding_per_regel(self):
+        # Per regel: 3 cent + 21% = 4 cent (btw 1). Twee regels: 8 cent, btw 2.
+        # Op het totaal afronden zou 7 cent (btw 1) geven.
+        tekst = factuurtotaal([("A", 3, "standaard"), ("B", 3, "standaard")])
+        self.assertEqual(
+            tekst.split("\n")[-1], "Totaal: € 0,08 (waarvan btw € 0,02)"
+        )
+
+    def test_negatief_bedrag(self):
+        with self.assertRaisesRegex(ValueError, "negatief"):
+            factuurtotaal([("Les", 5000, "standaard"), ("Fout", -1, "nul")])
+
 
 if __name__ == "__main__":
     unittest.main()
