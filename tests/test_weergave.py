@@ -1,5 +1,5 @@
 import unittest
-from weergave import euro, factuurregel
+from weergave import euro, factuurregel, factuurtotaal
 
 
 class WeergaveTest(unittest.TestCase):
@@ -51,6 +51,46 @@ class FactuurregelTest(unittest.TestCase):
         for leeg in ("", "   ", "\t"):
             with self.assertRaisesRegex(ValueError, "omschrijving"):
                 factuurregel(leeg, 100)
+
+
+class FactuurtotaalTest(unittest.TestCase):
+    def test_twee_regels(self):
+        tekst = factuurtotaal([("Les", 5000, "standaard"), ("Boek", 2000, "verlaagd")])
+        self.assertEqual(
+            tekst.split("\n"),
+            [
+                factuurregel("Les", 5000, "standaard"),
+                factuurregel("Boek", 2000, "verlaagd"),
+                "Totaal: € 81,70 (waarvan btw € 11,70)",
+            ],
+        )
+
+    def test_een_regel(self):
+        self.assertEqual(
+            factuurtotaal([("Lesuur", 10000, "standaard")]),
+            factuurregel("Lesuur", 10000, "standaard")
+            + "\nTotaal: € 121,00 (waarvan btw € 21,00)",
+        )
+
+    def test_lege_lijst(self):
+        with self.assertRaisesRegex(ValueError, "minstens één regel"):
+            factuurtotaal([])
+
+    def test_onbekend_tarief(self):
+        with self.assertRaisesRegex(ValueError, "onbekend btw-tarief"):
+            factuurtotaal([("Les", 5000, "luxe")])
+
+    def test_afronding_per_regel(self):
+        # Per regel: 3 cent + 21% = 4 cent (btw 1). Twee regels: 8 cent, btw 2.
+        # Op het totaal afronden zou 7 cent (btw 1) geven.
+        tekst = factuurtotaal([("A", 3, "standaard"), ("B", 3, "standaard")])
+        self.assertEqual(
+            tekst.split("\n")[-1], "Totaal: € 0,08 (waarvan btw € 0,02)"
+        )
+
+    def test_negatief_bedrag(self):
+        with self.assertRaisesRegex(ValueError, "negatief"):
+            factuurtotaal([("Les", 5000, "standaard"), ("Fout", -1, "nul")])
 
 
 if __name__ == "__main__":

@@ -19,3 +19,15 @@ def factuurregel(omschrijving, bedrag_centen, tarief="standaard"):
         f"{omschrijving}: {euro(bedrag_centen)} + {BTW_TARIEVEN[tarief]}% btw "
         f"{euro(btw)} = {euro(totaal)}"
     )
+
+
+def factuurtotaal(regels):
+    """Alle factuurregels onder elkaar, met een totaalregel incl. btw en het btw-deel."""
+    regels = list(regels)
+    if not regels:
+        raise ValueError("een factuur heeft minstens één regel nodig")
+    tekst = [factuurregel(*regel) for regel in regels]
+    totaal = sum(met_btw(bedrag, tarief) for _, bedrag, tarief in regels)
+    btw = sum(btw_bedrag(bedrag, tarief) for _, bedrag, tarief in regels)
+    tekst.append(f"Totaal: {euro(totaal)} (waarvan btw {euro(btw)})")
+    return "\n".join(tekst)
