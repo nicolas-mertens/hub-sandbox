@@ -46,3 +46,11 @@
 - `agenda/` met `__init__.py`, `fouten.py` (`AgendaFout`, `DubbeleBoeking`, `BuitenBeschikbaarheid`) en `tests/` met `test_omgeving.py` (tijdzone Europe/Brussels laden, foutenhierarchie).
 - Omgevingsresultaat in `agenda/OMGEVING.md` (Python 3.11.2, tijdzonedata aanwezig, 44 tests groen).
 - Openstaand: niets.
+
+## Half-open intervallen aftrekken en samenvoegen
+- `agenda/intervallen.py` toegevoegd met `samenvoegen`, `aftrekken` en `overlap` voor generieke vergelijkbare grenzen. Alleen standaardbibliotheek, geen grensrekenkunde, `match` of union-types.
+- Samenvoegen neemt overlap en aansluiting mee; overlap zelf sluit aansluiting uit. Aftrekken normaliseert beide invoerreeksen en ondersteunt meerdere verwijderingen over meerdere basisintervallen, zonder invoer te wijzigen.
+- Ongeldige intervallen (`start >= einde`) geven `ValueError`; de module documenteert de invoervorm en UTC-gebruik bij tijdzones.
+- Vaste tests voor minuutgrenzen, midden/rand/volledig aftrekken, lege en ongesorteerde invoer, generators en verschillende grenstypes. Eerst rood bevestigd door de ontbrekende module.
+- Validatie: `python3 -m unittest discover -s . -t . -p "test_*.py"`: alle 52 tests groen; `git diff --check` groen.
+- Openstaand: niets. Geen commit gemaakt.
