@@ -66,3 +66,8 @@
 - Bevinding bevestigd met `FoldVolgordeTest` (4 tests rood): bij dezelfde `ZoneInfo` negeert Python `fold` in `<`/`<=`, zodat `02:15 fold=1 → 02:45 fold=0` (31 okt 2027, Brussel) werd aanvaard en het geldige omgekeerde geweigerd.
 - Herstel: `_einde_na_start` in `agenda/modellen.py` vergelijkt in UTC; gebruikt door `Medewerker.afwezig` en `Boeking` (datetime). Alle 76 tests groen.
 - Openstaand: `agenda.py` moet later ook in UTC vergelijken. Geen commit gemaakt.
+
+## Grensdatums: AgendaFout in plaats van OverflowError
+- Bevestigd met `GrensDatumTest` (rood): `_einde_na_start` zette om naar UTC via `astimezone` en gaf `OverflowError` bij `0001-01-01 00:10+01:00` en `9999-12-31 23:10-01:00`, voor `Boeking` en `Medewerker.afwezig`.
+- Herstel: `_utc_sleutel` in `agenda/modellen.py` vergelijkt absolute tijden als geheel getal (microseconden), zonder buiten het bereik van `datetime` te gaan; die gevallen zijn nu geldig. `controleer_binnen_een_dag` zet een overflow bij de omzetting naar `Agenda.tz` om in `AgendaFout`. 80 tests groen.
+- Openstaand: `agenda.py` moet dezelfde sleutel gebruiken en `astimezone` tegen overflow bewaken. Geen commit gemaakt.

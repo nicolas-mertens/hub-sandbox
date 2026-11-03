@@ -256,5 +256,46 @@ class FoldVolgordeTest(unittest.TestCase):
         medewerker(afwezig=[(self.LATER, self.TWEEDE)])
 
 
+class GrensDatumTest(unittest.TestCase):
+    """Intervallen vlak bij de grenzen van datetime geven nooit een OverflowError."""
+
+    PLUS = timezone(timedelta(hours=1))
+    MIN = timezone(timedelta(hours=-1))
+
+    def gevallen(self):
+        yield datetime(1, 1, 1, 0, 10, tzinfo=self.PLUS), datetime(1, 1, 1, 0, 20, tzinfo=self.PLUS)
+        yield (
+            datetime(9999, 12, 31, 23, 10, tzinfo=self.MIN),
+            datetime(9999, 12, 31, 23, 20, tzinfo=self.MIN),
+        )
+
+    def test_boeking(self):
+        for start, einde in self.gevallen():
+            with self.subTest(start=start):
+                Boeking("b", "m", start, einde)
+
+    def test_afwezig(self):
+        for start, einde in self.gevallen():
+            with self.subTest(start=start):
+                Medewerker("m", "M", {}, afwezig=[(start, einde)])
+
+    def test_omgekeerd_blijft_fout(self):
+        start, einde = next(self.gevallen())
+        with self.assertRaises(AgendaFout):
+            Boeking("b", "m", einde, start)
+
+    def test_alleen_agendafout_uit_middernachtcontrole(self):
+        gevallen = list(self.gevallen()) + [
+            (datetime(9999, 12, 31, 23, 59, tzinfo=self.MIN), datetime.max.replace(tzinfo=self.MIN)),
+            (datetime.min.replace(tzinfo=self.PLUS), datetime(1, 1, 1, 0, 5, tzinfo=self.PLUS)),
+        ]
+        for start, einde in gevallen:
+            with self.subTest(start=start):
+                try:
+                    controleer_binnen_een_dag(Boeking("b", "m", start, einde), "Europe/Brussels")
+                except AgendaFout:
+                    pass
+
+
 if __name__ == "__main__":
     unittest.main()
