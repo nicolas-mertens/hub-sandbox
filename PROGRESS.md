@@ -73,3 +73,7 @@
 - `agenda/__init__.py` exporteert nu `Agenda`, de modellen en de fouten.
 - Tests: `agenda/tests/test_agenda_medewerkers.py` (gewone dag, raster 09:07, lente, herfst met fold/utcoffset, eigenschappentest). Alle tests groen.
 - Openstaand: `Materiaal` en `vrije_dagen` (andere taak; `Agenda` weigert `Materiaal` nu met `AgendaFout`), README, hub-sandbox-toepassing.
+
+## Review ronde 1 (Agenda): boeking-id `_vraag` brak `is_vrij()`
+- Bevinding bevestigd met `test_is_vrij_met_boeking_id_vraag` (rood: `AgendaFout: dubbele boeking-id: _vraag`): `is_vrij` gebruikte een vaste hulp-id die met een bestaande boeking kon botsen.
+- Herstel: `Agenda._controleer(..., controleer_id=False)` voor `is_vrij`; de id-controle blijft in constructor en `boek()`. 107 tests groen. Geen commit gemaakt.

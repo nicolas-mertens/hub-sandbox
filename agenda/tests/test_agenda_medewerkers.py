@@ -96,6 +96,11 @@ class BoekenTest(unittest.TestCase):
         self.assertEqual(len(tweede.boekingen), 2)
         self.assertEqual(len(nieuw.boekingen), 1)
 
+    def test_is_vrij_met_boeking_id_vraag(self):
+        agenda = Agenda([dagwerk()], [Boeking("_vraag", "m1", dt(9), dt(9, 30))])
+        self.assertTrue(agenda.is_vrij("m1", dt(11), dt(11, 30)))
+        self.assertFalse(agenda.is_vrij("m1", dt(9), dt(9, 30)))
+
     def test_mislukte_boek_laat_agenda_gelijk(self):
         agenda = Agenda([dagwerk()], [Boeking("a", "m1", dt(9), dt(9, 30))])
         voor = agenda.vrije_tijden("m1", MAANDAG, 30)

@@ -99,7 +99,8 @@ class Agenda:
         vakken = self._intervallen(dag, medewerker.werktijden.get(weekdag, ()))
         return [(vak, aftrekken([vak], weg)) for vak in vakken]
 
-    def _controleer(self, boeking: Any, bestaand: Iterable[Boeking]) -> None:
+    def _controleer(self, boeking: Any, bestaand: Iterable[Boeking],
+                    controleer_id: bool = True) -> None:
         if not isinstance(boeking, Boeking):
             raise AgendaFout("een boeking moet een Boeking zijn")
         medewerker = self._medewerker(boeking.middel_id)
@@ -107,7 +108,7 @@ class Agenda:
             raise AgendaFout("een medewerker wordt met datetimes geboekt")
         controleer_binnen_een_dag(boeking, self._tz)
         bestaand = list(bestaand)
-        if any(b.id == boeking.id for b in bestaand):
+        if controleer_id and any(b.id == boeking.id for b in bestaand):
             raise AgendaFout("dubbele boeking-id: %s" % boeking.id)
         interval = (_utc(boeking.start), _utc(boeking.einde))
         dag = boeking.start.astimezone(self._zone).date()
@@ -130,7 +131,7 @@ class Agenda:
         """Is [start, einde) boekbaar? Buiten de beschikbaarheid is False, geen fout."""
         boeking = Boeking("_vraag", middel_id, start, einde)
         try:
-            self._controleer(boeking, self._boekingen)
+            self._controleer(boeking, self._boekingen, controleer_id=False)
         except (BuitenBeschikbaarheid, DubbeleBoeking):
             return False
         return True
