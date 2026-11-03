@@ -102,3 +102,7 @@
 - `vrije_momenten.py` (root): kleine toepassing met `from agenda import ...`, verzonnen namen en `.test`-adressen; `python3 vrije_momenten.py` drukt vrije momenten af. Test: `tests/test_vrije_momenten.py` (staat in `tests/`, zodat ook de CI die vindt).
 - Testcommando uit de kop: 140 tests groen. Bestaande hub-sandbox-code ongewijzigd. De CI draait alleen `tests/` en dus niet `agenda/tests/`; dat is niet aangepast (buiten scope), eigenaar kan beslissen.
 - Openstaand: niets. Geen commit gemaakt.
+
+## agenda: review ronde 1 (lentegat in README)
+- Bevinding: README beweerde dat een werktijd in het lentegat naar de dichtstbijzijnde bestaande tijd schuift; echt gedrag (`fold=0`) behoudt de offset van vóór de overgang (02:50 wordt 03:50 CEST). README aangepast; code ongewijzigd (contract noemt `fold=0`).
+- Tests: `test_lente_werktijd_begint_in_het_gat` (gedrag vastgelegd) en `test_readme_beschrijft_lentegat_zoals_het_werkt` (faalde eerst). 142 tests groen. Geen commit gemaakt.

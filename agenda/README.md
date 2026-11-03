@@ -114,8 +114,9 @@ pauze heen of over middernacht wordt geweigerd.
   overspant is toegestaan en rekent op verstreken tijd.
 - **Lentedag** (laatste zondag van maart; 02:00–03:00 bestaat niet, het *lentegat*): een werktijd 01:00–04:00 telt 2
   verstreken uren (01:00–02:00 en 03:00–04:00). Niet-bestaande starttijden worden nooit aangeboden. Een werktijd die
-  precies in het gat begint of eindigt, wordt naar de dichtstbijzijnde bestaande tijd geschoven (`zoneinfo`-gedrag
-  `fold=0`).
+  in het gat begint of eindigt, wordt met `zoneinfo`-gedrag `fold=0` gelezen: de offset van vóór de overgang (+01:00)
+  blijft gelden. De kloktijd schuift dus een uur vooruit, niet naar het einde van het gat: een werktijd die om 02:50
+  begint, begint feitelijk om 03:50 (CEST), en een werktijd die om 02:30 eindigt, eindigt om 03:30.
 - **Herfstdag** (laatste zondag van oktober; 02:00–03:00 komt twee keer voor): een werktijd 01:00–04:00 telt 4 verstreken
   uren. Beide voorkomens van 02:00 worden aangeboden: het eerste met `fold=0` (`+02:00`), het tweede met `fold=1`
   (`+01:00`); te onderscheiden via `utcoffset()` en `fold`.

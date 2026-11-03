@@ -20,6 +20,12 @@ class ReadmeVoorbeeldTest(unittest.TestCase):
             self.assertIn(onderdeel, tekst)
         self.assertNotIn("Python 3.9", tekst.replace("op 3.9 of nieuwer", ""))
 
+    def test_readme_beschrijft_lentegat_zoals_het_werkt(self):
+        tekst = " ".join(README.read_text(encoding="utf-8").split())
+        self.assertNotIn("dichtstbijzijnde bestaande tijd", tekst)
+        self.assertIn("02:50", tekst)
+        self.assertIn("03:50", tekst)
+
 
 if __name__ == "__main__":
     unittest.main()
