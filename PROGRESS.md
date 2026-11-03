@@ -82,3 +82,9 @@
 - Bevestigd met `GrensDatumTest` (rood): `_einde_na_start` zette om naar UTC via `astimezone` en gaf `OverflowError` bij `0001-01-01 00:10+01:00` en `9999-12-31 23:10-01:00`, voor `Boeking` en `Medewerker.afwezig`.
 - Herstel: `_utc_sleutel` in `agenda/modellen.py` vergelijkt absolute tijden als geheel getal (microseconden), zonder buiten het bereik van `datetime` te gaan; die gevallen zijn nu geldig. `controleer_binnen_een_dag` zet een overflow bij de omzetting naar `Agenda.tz` om in `AgendaFout`. 80 tests groen.
 - Openstaand: `agenda.py` moet dezelfde sleutel gebruiken en `astimezone` tegen overflow bewaken. Geen commit gemaakt.
+
+## Agenda: materiaal op dagniveau (vrije_dagen en boeken)
+- `agenda/agenda.py`: `Agenda` accepteert nu ook `Materiaal`. Boeken en `is_vrij` met `date`s (einde inclusief) rekenen met half-open dagnummers `[start, einde + 1)` via `aftrekken`/`overlap`; nieuw `vrije_dagen(middel_id, van, tot)` (inclusief, oplopend, zonder dubbelen). Rekent op intervallen, niet per dag, dus ook `date.min`..`date.max` werkt.
+- Fouten: `datetime` bij materiaal, `date` bij medewerker, `vrije_dagen` op een medewerker, `vrije_tijden` op materiaal, `van > tot` en onbekend middel geven `AgendaFout`; overlap `DubbeleBoeking`; buiten `beschikbaar` `BuitenBeschikbaarheid`. Constructor en `boek()` delen `_controleer`, dus dezelfde uitzondering.
+- Tests: `agenda/tests/test_agenda_materiaal.py`. Alle 133 tests groen met het testcommando uit de kop.
+- Openstaand: README, hub-sandbox-toepassing. Geen commit gemaakt.

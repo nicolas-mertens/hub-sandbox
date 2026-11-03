@@ -1,16 +1,17 @@
-"""De klasse Agenda: vrije tijden, controle en boeken voor medewerkers.
+"""De klasse Agenda: vrije tijden, controle en boeken voor medewerkers en materiaal.
 
-Alles wordt in UTC berekend; lokale werktijden en pauzes worden per dag met
+Medewerkers rekenen in UTC; lokale werktijden en pauzes worden per dag met
 zoneinfo omgezet (fold=0 voor niet-bestaande of dubbele kloktijden).
+Materiaal rekent met hele dagen, als half-open reeksen dagnummers [start, einde + 1).
 """
 
 from datetime import date, datetime, time, timedelta, timezone
 from types import MappingProxyType
-from typing import Any, Dict, Iterable, List, Tuple
+from typing import Any, Dict, Iterable, List, Tuple, Union
 
 from agenda.fouten import AgendaFout, BuitenBeschikbaarheid, DubbeleBoeking
 from agenda.intervallen import aftrekken, overlap
-from agenda.modellen import Boeking, Medewerker, _zone, controleer_binnen_een_dag
+from agenda.modellen import Boeking, Materiaal, Medewerker, _dag, _zone, controleer_binnen_een_dag
 
 _UTC = timezone.utc
 Interval = Tuple[datetime, datetime]
@@ -31,7 +32,7 @@ class Agenda:
 
     __slots__ = ("_tz", "_zone", "_middelen", "_boekingen")
 
-    def __init__(self, middelen: Iterable[Medewerker], boekingen: Iterable[Boeking] = (),
+    def __init__(self, middelen: Iterable[Union[Medewerker, Materiaal]], boekingen: Iterable[Boeking] = (),
                  tz: str = "Europe/Brussels") -> None:
         zone = _zone(tz)
         try:
@@ -39,10 +40,10 @@ class Agenda:
             boekingenlijst = list(boekingen)
         except TypeError:
             raise AgendaFout("middelen en boekingen moeten reeksen zijn") from None
-        per_id: Dict[str, Medewerker] = {}
+        per_id: Dict[str, Union[Medewerker, Materiaal]] = {}
         for middel in lijst:
-            if not isinstance(middel, Medewerker):
-                raise AgendaFout("alleen een Medewerker wordt ondersteund")
+            if not isinstance(middel, (Medewerker, Materiaal)):
+                raise AgendaFout("een middel moet een Medewerker of Materiaal zijn")
             if middel.id in per_id:
                 raise AgendaFout("dubbele middel-id: %s" % middel.id)
             per_id[middel.id] = middel
@@ -64,7 +65,7 @@ class Agenda:
         return self._tz
 
     @property
-    def middelen(self) -> Tuple[Medewerker, ...]:
+    def middelen(self) -> Tuple[Union[Medewerker, Materiaal], ...]:
         return tuple(self._middelen.values())
 
     @property
@@ -73,10 +74,30 @@ class Agenda:
 
     # -- rekenwerk ---------------------------------------------------------
 
-    def _medewerker(self, middel_id: Any) -> Medewerker:
+    def _middel(self, middel_id: Any) -> Union[Medewerker, Materiaal]:
         if not isinstance(middel_id, str) or middel_id not in self._middelen:
             raise AgendaFout("onbekend middel: %r" % (middel_id,))
         return self._middelen[middel_id]
+
+    def _medewerker(self, middel_id: Any) -> Medewerker:
+        middel = self._middel(middel_id)
+        if not isinstance(middel, Medewerker):
+            raise AgendaFout("%s is geen medewerker" % middel_id)
+        return middel
+
+    def _materiaal(self, middel_id: Any) -> Materiaal:
+        middel = self._middel(middel_id)
+        if not isinstance(middel, Materiaal):
+            raise AgendaFout("%s is geen materiaal" % middel_id)
+        return middel
+
+    def _vrije_dagnummers(self, materiaal: Materiaal,
+                          boekingen: Iterable[Boeking]) -> List[Tuple[int, int]]:
+        """Vrije dagen als half-open reeksen dagnummers (ordinals)."""
+        beschikbaar = [(van.toordinal(), tot.toordinal() + 1) for van, tot in materiaal.beschikbaar]
+        bezet = [(b.start.toordinal(), b.einde.toordinal() + 1)
+                 for b in boekingen if b.middel_id == materiaal.id]
+        return aftrekken(beschikbaar, bezet)
 
     def _lokaal(self, dag: date, tijd: time) -> datetime:
         return _utc(datetime.combine(dag, tijd, tzinfo=self._zone))
@@ -103,11 +124,26 @@ class Agenda:
                     controleer_id: bool = True) -> None:
         if not isinstance(boeking, Boeking):
             raise AgendaFout("een boeking moet een Boeking zijn")
-        medewerker = self._medewerker(boeking.middel_id)
+        middel = self._middel(boeking.middel_id)
+        bestaand = list(bestaand)
+        if isinstance(middel, Materiaal):
+            if isinstance(boeking.start, datetime):
+                raise AgendaFout("materiaal wordt met dates geboekt")
+            if controleer_id and any(b.id == boeking.id for b in bestaand):
+                raise AgendaFout("dubbele boeking-id: %s" % boeking.id)
+            dagen = (boeking.start.toordinal(), boeking.einde.toordinal() + 1)
+            if not any(a <= dagen[0] and dagen[1] <= b
+                       for a, b in self._vrije_dagnummers(middel, ())):
+                raise BuitenBeschikbaarheid("de boeking valt buiten de beschikbaarheid")
+            for andere in bestaand:
+                if andere.middel_id == boeking.middel_id and overlap(
+                        dagen, (andere.start.toordinal(), andere.einde.toordinal() + 1)):
+                    raise DubbeleBoeking("de boeking overlapt boeking %s" % andere.id)
+            return
+        medewerker = middel
         if not isinstance(boeking.start, datetime):
             raise AgendaFout("een medewerker wordt met datetimes geboekt")
         controleer_binnen_een_dag(boeking, self._tz)
-        bestaand = list(bestaand)
         if controleer_id and any(b.id == boeking.id for b in bestaand):
             raise AgendaFout("dubbele boeking-id: %s" % boeking.id)
         interval = (_utc(boeking.start), _utc(boeking.einde))
@@ -127,14 +163,27 @@ class Agenda:
         self._controleer(boeking, self._boekingen)
         return Agenda(self._middelen.values(), self._boekingen + (boeking,), self._tz)
 
-    def is_vrij(self, middel_id: str, start: datetime, einde: datetime) -> bool:
-        """Is [start, einde) boekbaar? Buiten de beschikbaarheid is False, geen fout."""
+    def is_vrij(self, middel_id: str, start: Union[datetime, date],
+                einde: Union[datetime, date]) -> bool:
+        """Is [start, einde) (medewerker) of start t/m einde (materiaal) boekbaar? Buiten de beschikbaarheid is False, geen fout."""
         boeking = Boeking("_vraag", middel_id, start, einde)
         try:
             self._controleer(boeking, self._boekingen, controleer_id=False)
         except (BuitenBeschikbaarheid, DubbeleBoeking):
             return False
         return True
+
+    def vrije_dagen(self, middel_id: str, van: date, tot: date) -> List[date]:
+        """Vrije dagen van materiaal binnen [van, tot], beide inclusief, oplopend."""
+        materiaal = self._materiaal(middel_id)
+        van = _dag(van, "van")
+        tot = _dag(tot, "tot")
+        if tot < van:
+            raise AgendaFout("tot mag niet voor van liggen")
+        begin, eind = van.toordinal(), tot.toordinal() + 1
+        return [date.fromordinal(n)
+                for a, b in self._vrije_dagnummers(materiaal, self._boekingen)
+                for n in range(max(a, begin), min(b, eind))]
 
     def vrije_tijden(self, middel_id: str, dag: date, duur_minuten: int,
                      stap_minuten: int = 15) -> List[datetime]:
