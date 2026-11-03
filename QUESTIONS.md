@@ -21,3 +21,13 @@ Nodig:
 1. De opgeleverde modellen (of het contract met velden, types en publieke namen van `Materiaal`, `Medewerker`, `Boeking`).
 2. De volledige foutentabel (welke situatie geeft welk uitzonderingstype).
 3. Het type van `beschikbaar` (set van data, lijst van periodes?) en van `van`/`tot`/`start`/`einde` bij materiaal (`date`?).
+
+## Medewerkers op minuutniveau met zomertijd (agenda/)
+
+De voorgaande taken (modellen en intervalrekenen, klasse Agenda met materiaal) hebben niets opgeleverd: `agenda/` bevat alleen `fouten.py`. Er is geen `Agenda`, `Medewerker`, `Boeking` of `intervallen.py` om `vrije_tijden`, `is_vrij` en `boek` aan toe te voegen. Het contract waar de taak naar verwijst ("het contract", ook voor het stappenraster) staat nergens in de taak of de repo, en het vierde en vijfde acceptatiecriterium zijn halverwege afgebroken ("… duur/" en "Een boeking die de …").
+
+Zonder die onderdelen moet ik veldnamen (werktijden, pauzes, afwezigheid, `Agenda.tz`), signaturen en de foutprioriteit verzinnen. Daarom heb ik niets gebouwd.
+
+Nodig:
+1. De opgeleverde modellen en `Agenda`, of het volledige contract (velden, types, publieke namen, signaturen van `vrije_tijden`, `is_vrij`, `boek`, de foutentabel).
+2. De volledige tekst van het vierde en vijfde acceptatiecriterium.

@@ -46,3 +46,7 @@
 - `agenda/` met `__init__.py`, `fouten.py` (`AgendaFout`, `DubbeleBoeking`, `BuitenBeschikbaarheid`) en `tests/` met `test_omgeving.py` (tijdzone Europe/Brussels laden, foutenhierarchie).
 - Omgevingsresultaat in `agenda/OMGEVING.md` (Python 3.11.2, tijdzonedata aanwezig, 44 tests groen).
 - Openstaand: niets.
+
+## Medewerkers op minuutniveau met zomertijd
+- Niets gebouwd: de vorige taken hebben geen modellen of `Agenda` opgeleverd en het contract ontbreekt. Zie `QUESTIONS.md`.
+- Openstaand: de ontbrekende onderdelen en het contract, daarna deze taak opnieuw.
