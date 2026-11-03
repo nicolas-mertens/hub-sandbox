@@ -11,14 +11,26 @@ from typing import Any, Dict, Iterable, List, Tuple, Union
 
 from agenda.fouten import AgendaFout, BuitenBeschikbaarheid, DubbeleBoeking
 from agenda.intervallen import aftrekken, overlap
-from agenda.modellen import Boeking, Materiaal, Medewerker, _dag, _zone, controleer_binnen_een_dag
+from agenda.modellen import (Boeking, Materiaal, Medewerker, _dag, _utc_sleutel, _zone,
+                             controleer_binnen_een_dag)
 
 _UTC = timezone.utc
-Interval = Tuple[datetime, datetime]
+Interval = Tuple[int, int]
+_MICRO = timedelta(microseconds=1)
+_NUL = _utc_sleutel(datetime(1, 1, 1, tzinfo=_UTC))
+_MINUUT = 60000000
 
 
-def _utc(waarde: datetime) -> datetime:
-    return waarde.astimezone(_UTC)
+def _utc(waarde: datetime) -> int:
+    """Absoluut tijdstip als geheel getal (microseconden); loopt nooit over de datetime-grens."""
+    return _utc_sleutel(waarde)
+
+
+def _datetime(sleutel: int, zone: Any) -> datetime:
+    try:
+        return (datetime(1, 1, 1, tzinfo=_UTC) + _MICRO * (sleutel - _NUL)).astimezone(zone)
+    except OverflowError:
+        raise AgendaFout("tijdstip ligt te dicht bij de grens van datetime") from None
 
 
 def _minuten(waarde: Any, veld: str) -> int:
@@ -99,7 +111,7 @@ class Agenda:
                  for b in boekingen if b.middel_id == materiaal.id]
         return aftrekken(beschikbaar, bezet)
 
-    def _lokaal(self, dag: date, tijd: time) -> datetime:
+    def _lokaal(self, dag: date, tijd: time) -> int:
         return _utc(datetime.combine(dag, tijd, tzinfo=self._zone))
 
     def _intervallen(self, dag: date, vakken: Iterable[Tuple[time, time]]) -> List[Interval]:
@@ -147,7 +159,10 @@ class Agenda:
         if controleer_id and any(b.id == boeking.id for b in bestaand):
             raise AgendaFout("dubbele boeking-id: %s" % boeking.id)
         interval = (_utc(boeking.start), _utc(boeking.einde))
-        dag = boeking.start.astimezone(self._zone).date()
+        try:
+            dag = boeking.start.astimezone(self._zone).date()
+        except OverflowError:
+            raise AgendaFout("tijdstip ligt te dicht bij de grens van datetime") from None
         if not any(a <= interval[0] and interval[1] <= b
                    for _, vrij in self._vrij_per_vak(medewerker, dag) for a, b in vrij):
             raise BuitenBeschikbaarheid("de boeking valt buiten de beschikbaarheid")
@@ -189,8 +204,8 @@ class Agenda:
                      stap_minuten: int = 15) -> List[datetime]:
         """Starttijden (aware, oplopend) waarop duur_minuten volledig vrij is."""
         medewerker = self._medewerker(middel_id)
-        duur = timedelta(minutes=_minuten(duur_minuten, "duur_minuten"))
-        stap = timedelta(minutes=_minuten(stap_minuten, "stap_minuten"))
+        duur = _minuten(duur_minuten, "duur_minuten") * _MINUUT
+        stap = _minuten(stap_minuten, "stap_minuten") * _MINUUT
         if not isinstance(dag, date) or isinstance(dag, datetime):
             raise AgendaFout("dag moet een date zijn")
         starts = set()
@@ -200,4 +215,4 @@ class Agenda:
                 if any(a <= moment and moment + duur <= b for a, b in vrij):
                     starts.add(moment)
                 moment += stap
-        return [s.astimezone(self._zone) for s in sorted(starts)]
+        return [_datetime(s, self._zone) for s in sorted(starts)]

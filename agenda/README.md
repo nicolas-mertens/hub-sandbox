@@ -103,7 +103,10 @@ lijsten heeft geen effect.
 | Bereikvraag | n.v.t. | `vrije_dagen(middel_id, van, tot)` |
 
 Een boeking van een medewerker valt binnen één lokale dag (in `Agenda.tz`) en binnen één werktijdvak: een boeking over een
-pauze heen of over middernacht wordt geweigerd.
+pauze heen of over middernacht wordt geweigerd. Aansluitende werktijdvakken (bv. 09:00–10:00 en 10:00–11:00) worden niet
+samengevoegd: een boeking 09:30–10:30 is `BuitenBeschikbaarheid` en `vrije_tijden` biedt zo'n start niet aan. Wie één
+doorlopend vak wil, geeft één tijdvak op. Tijdstippen die buiten het bereik van `datetime` vallen zodra ze naar
+`Agenda.tz` worden omgezet (bv. `0001-01-01 00:10+01:00`), geven een `AgendaFout`, nooit een `OverflowError`.
 
 ### Zomertijd en tijdzone
 

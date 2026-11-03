@@ -280,3 +280,85 @@ class EigenschapTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class GrensDatumAgendaTest(unittest.TestCase):
+    """Grensdatums geven een AgendaFout of een gewoon antwoord, nooit een OverflowError."""
+
+    PLUS = timezone(timedelta(hours=1))
+    MIN = timezone(timedelta(hours=-1))
+
+    def gevallen(self):
+        yield datetime(1, 1, 1, 0, 10, tzinfo=self.PLUS), datetime(1, 1, 1, 0, 20, tzinfo=self.PLUS)
+        yield (datetime(9999, 12, 31, 23, 40, tzinfo=self.MIN),
+               datetime(9999, 12, 31, 23, 50, tzinfo=self.MIN))
+
+    def agenda(self, **kw):
+        return Agenda([dagwerk()], **kw)
+
+    def antwoord(self, functie):
+        try:
+            return functie()
+        except AgendaFout:
+            return None
+
+    def test_boek(self):
+        for start, einde in self.gevallen():
+            with self.subTest(start=start):
+                with self.assertRaises(AgendaFout):  # buiten werktijd, geen OverflowError
+                    self.agenda().boek(Boeking("b", "m1", start, einde))
+
+    def test_is_vrij(self):
+        for start, einde in self.gevallen():
+            with self.subTest(start=start):
+                self.assertIn(self.antwoord(lambda: self.agenda().is_vrij("m1", start, einde)), (None, False))
+
+    def test_constructor(self):
+        for start, einde in self.gevallen():
+            with self.subTest(start=start):
+                with self.assertRaises(AgendaFout):
+                    Agenda([dagwerk()], [Boeking("b", "m1", start, einde)])
+
+    def test_afwezig_op_grensdag(self):
+        for start, einde in self.gevallen():
+            with self.subTest(start=start):
+                m = dagwerk(werktijden={d: [(time(0), time(23, 30))] for d in range(7)},
+                            afwezig=[(start, einde)])
+                agenda = Agenda([m])
+                self.antwoord(lambda: agenda.vrije_tijden("m1", date.min, 30))
+                self.antwoord(lambda: agenda.vrije_tijden("m1", date.max, 30))
+                self.antwoord(lambda: agenda.is_vrij("m1", start, einde))
+
+    def test_vrije_tijden_op_grensdagen(self):
+        m = dagwerk(werktijden={d: [(time(0), time(23, 30))] for d in range(7)})
+        agenda = Agenda([m])
+        for dag in (date.min, date.max):
+            with self.subTest(dag=dag):
+                self.antwoord(lambda: agenda.vrije_tijden("m1", dag, 30))
+
+    def test_boek_op_grensdag_met_werktijd(self):
+        m = dagwerk(werktijden={d: [(time(0, 30), time(23, 30))] for d in range(7)})
+        for start, einde in self.gevallen():
+            with self.subTest(start=start):
+                agenda = Agenda([m], tz="UTC")
+                self.antwoord(lambda: agenda.boek(Boeking("b", "m1", start, einde)))
+                self.antwoord(lambda: agenda.is_vrij("m1", start, einde))
+
+
+class AansluitendeVakkenTest(unittest.TestCase):
+    """Besluit (masterplan: 'een boeking mag meerdere werktijdvakken niet overspannen'):
+    aansluitende vakken worden niet samengevoegd."""
+
+    def agenda(self):
+        return Agenda([dagwerk(werktijden={0: [(time(9), time(10)), (time(10), time(11))]}, pauzes={})])
+
+    def test_boeking_over_de_aansluiting_wordt_geweigerd(self):
+        with self.assertRaises(BuitenBeschikbaarheid):
+            self.agenda().boek(Boeking("b", "m1", dt(9, 30), dt(10, 30)))
+        self.assertFalse(self.agenda().is_vrij("m1", dt(9, 30), dt(10, 30)))
+
+    def test_vrije_tijden_noemt_starts_over_de_aansluiting_niet(self):
+        self.assertEqual(uren(self.agenda().vrije_tijden("m1", MAANDAG, 60, 30)), [(9, 0), (10, 0)])
+
+    def test_boeking_binnen_een_vak_slaagt(self):
+        self.agenda().boek(Boeking("b", "m1", dt(10), dt(11)))
