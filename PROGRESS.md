@@ -66,3 +66,10 @@
 - Bevinding bevestigd met `FoldVolgordeTest` (4 tests rood): bij dezelfde `ZoneInfo` negeert Python `fold` in `<`/`<=`, zodat `02:15 fold=1 → 02:45 fold=0` (31 okt 2027, Brussel) werd aanvaard en het geldige omgekeerde geweigerd.
 - Herstel: `_einde_na_start` in `agenda/modellen.py` vergelijkt in UTC; gebruikt door `Medewerker.afwezig` en `Boeking` (datetime). Alle 76 tests groen.
 - Openstaand: `agenda.py` moet later ook in UTC vergelijken. Geen commit gemaakt.
+
+## Agenda-klasse voor medewerkers, boeken en zomertijd (agenda/)
+- `agenda/agenda.py`: `Agenda(middelen, boekingen=(), tz="Europe/Brussels")` met `boek()`, `is_vrij()` en `vrije_tijden()` voor `Medewerker`. Alles rekent in UTC; werktijden en pauzes worden per dag met zoneinfo omgezet (`fold=0`). Het raster begint bij elk werktijdvak en loopt door in verstreken minuten.
+- De constructor valideert exact als `boek()` (onbekend middel, dubbele id's, `DubbeleBoeking`, `BuitenBeschikbaarheid`, middernacht, onbekende tz). `boek()` geeft een nieuwe agenda; de oude blijft gelijk.
+- `agenda/__init__.py` exporteert nu `Agenda`, de modellen en de fouten.
+- Tests: `agenda/tests/test_agenda_medewerkers.py` (gewone dag, raster 09:07, lente, herfst met fold/utcoffset, eigenschappentest). Alle tests groen.
+- Openstaand: `Materiaal` en `vrije_dagen` (andere taak; `Agenda` weigert `Materiaal` nu met `AgendaFout`), README, hub-sandbox-toepassing.
