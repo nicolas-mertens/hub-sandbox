@@ -77,3 +77,8 @@
 ## Review ronde 1 (Agenda): boeking-id `_vraag` brak `is_vrij()`
 - Bevinding bevestigd met `test_is_vrij_met_boeking_id_vraag` (rood: `AgendaFout: dubbele boeking-id: _vraag`): `is_vrij` gebruikte een vaste hulp-id die met een bestaande boeking kon botsen.
 - Herstel: `Agenda._controleer(..., controleer_id=False)` voor `is_vrij`; de id-controle blijft in constructor en `boek()`. 107 tests groen. Geen commit gemaakt.
+
+## Grensdatums: AgendaFout in plaats van OverflowError
+- Bevestigd met `GrensDatumTest` (rood): `_einde_na_start` zette om naar UTC via `astimezone` en gaf `OverflowError` bij `0001-01-01 00:10+01:00` en `9999-12-31 23:10-01:00`, voor `Boeking` en `Medewerker.afwezig`.
+- Herstel: `_utc_sleutel` in `agenda/modellen.py` vergelijkt absolute tijden als geheel getal (microseconden), zonder buiten het bereik van `datetime` te gaan; die gevallen zijn nu geldig. `controleer_binnen_een_dag` zet een overflow bij de omzetting naar `Agenda.tz` om in `AgendaFout`. 80 tests groen.
+- Openstaand: `agenda.py` moet dezelfde sleutel gebruiken en `astimezone` tegen overflow bewaken. Geen commit gemaakt.

@@ -5,7 +5,7 @@ ValueError. Collecties worden diep gekopieerd naar tuples of MappingProxyType.
 """
 
 from dataclasses import dataclass
-from datetime import date, datetime, time, timedelta, timezone
+from datetime import date, datetime, time, timedelta
 from types import MappingProxyType
 from typing import Any, List, Tuple
 from zoneinfo import ZoneInfo
@@ -29,7 +29,16 @@ def _aware(waarde: Any, veld: str) -> datetime:
 
 def _einde_na_start(start: datetime, einde: datetime) -> bool:
     # Bij dezelfde ZoneInfo vergelijkt Python kloktijden zonder fold; reken in UTC.
-    return einde.astimezone(timezone.utc) > start.astimezone(timezone.utc)
+    return _utc_sleutel(einde) > _utc_sleutel(start)
+
+
+def _utc_sleutel(waarde: datetime) -> int:
+    """Absoluut tijdstip in microseconden, zonder buiten het bereik van datetime te komen."""
+    lokaal = waarde.replace(tzinfo=None)
+    micro = ((lokaal.toordinal() * 24 + lokaal.hour) * 60 + lokaal.minute) * 60 + lokaal.second
+    micro = micro * 1000000 + lokaal.microsecond
+    offset = waarde.utcoffset()
+    return micro - (offset.days * 86400 + offset.seconds) * 1000000 - offset.microseconds
 
 
 def _dag(waarde: Any, veld: str) -> date:
@@ -177,8 +186,12 @@ def controleer_binnen_een_dag(boeking: Boeking, tz: Any) -> None:
     zone = _zone(tz)
     if not isinstance(boeking.start, datetime):
         return
-    start = boeking.start.astimezone(zone)
-    einde = boeking.einde.astimezone(zone)
-    # einde is exclusief: een boeking tot precies middernacht valt nog op de startdag
-    if (einde - timedelta(microseconds=1)).date() != start.date():
+    try:
+        start = boeking.start.astimezone(zone)
+        einde = boeking.einde.astimezone(zone)
+        # einde is exclusief: een boeking tot precies middernacht valt nog op de startdag
+        laatste = (einde - timedelta(microseconds=1)).date()
+    except OverflowError:
+        raise AgendaFout("tijdstip ligt te dicht bij de grens van datetime") from None
+    if laatste != start.date():
         raise AgendaFout("een boeking mag niet over middernacht lopen")
