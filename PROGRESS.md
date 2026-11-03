@@ -54,3 +54,15 @@
 - Vaste tests voor minuutgrenzen, midden/rand/volledig aftrekken, lege en ongesorteerde invoer, generators en verschillende grenstypes. Eerst rood bevestigd door de ontbrekende module.
 - Validatie: `python3 -m unittest discover -s . -t . -p "test_*.py"`: alle 52 tests groen; `git diff --check` groen.
 - Openstaand: niets. Geen commit gemaakt.
+
+## Modellen, fouten en validatie (agenda/)
+- `agenda/modellen.py`: frozen dataclasses `Medewerker`, `Materiaal`, `Boeking`; alle invoer wordt gevalideerd (alleen `AgendaFout`) en diep gekopieerd naar tuples en `MappingProxyType`. Geen `match`, geen `X | Y`.
+- Weekdag-mappings: sleutels `int` 0-6 (geen `bool`), naieve `time`, `start < einde`, geen overlap per dag (ook bij pauzes). `Boeking` kiest datetime- of date-modus; het middeltype controleert `Agenda` later.
+- `controleer_binnen_een_dag(boeking, tz)` weigert een boeking over middernacht in `Agenda.tz` (een `Boeking` kent zelf geen zone); `Agenda` moet dit aanroepen.
+- Foutenhierarchie stond al in `agenda/fouten.py`; nu ook getest. Tests: `agenda/tests/test_modellen.py`.
+- Openstaand: `Agenda` moet middeltype tegenover boekingssoort controleren en `controleer_binnen_een_dag` gebruiken.
+
+## Review ronde 1: fold-volgorde in modellen
+- Bevinding bevestigd met `FoldVolgordeTest` (4 tests rood): bij dezelfde `ZoneInfo` negeert Python `fold` in `<`/`<=`, zodat `02:15 fold=1 → 02:45 fold=0` (31 okt 2027, Brussel) werd aanvaard en het geldige omgekeerde geweigerd.
+- Herstel: `_einde_na_start` in `agenda/modellen.py` vergelijkt in UTC; gebruikt door `Medewerker.afwezig` en `Boeking` (datetime). Alle 76 tests groen.
+- Openstaand: `agenda.py` moet later ook in UTC vergelijken. Geen commit gemaakt.
