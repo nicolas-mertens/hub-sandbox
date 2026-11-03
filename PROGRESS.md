@@ -41,3 +41,8 @@
 - Lege lijst geeft dezelfde `ValueError` als `factuurtotaal` (die wordt eerst aangeroepen); ook een generator als invoer werkt.
 - Tests in `tests/test_weergave.py` (`FactuurtotaalContantTest`).
 - Openstaand: niets.
+
+## Skelet van het pakket agenda/
+- `agenda/` met `__init__.py`, `fouten.py` (`AgendaFout`, `DubbeleBoeking`, `BuitenBeschikbaarheid`) en `tests/` met `test_omgeving.py` (tijdzone Europe/Brussels laden, foutenhierarchie).
+- Omgevingsresultaat in `agenda/OMGEVING.md` (Python 3.11.2, tijdzonedata aanwezig, 44 tests groen).
+- Openstaand: niets.
