@@ -88,3 +88,10 @@
 - Fouten: `datetime` bij materiaal, `date` bij medewerker, `vrije_dagen` op een medewerker, `vrije_tijden` op materiaal, `van > tot` en onbekend middel geven `AgendaFout`; overlap `DubbeleBoeking`; buiten `beschikbaar` `BuitenBeschikbaarheid`. Constructor en `boek()` delen `_controleer`, dus dezelfde uitzondering.
 - Tests: `agenda/tests/test_agenda_materiaal.py`. Alle 133 tests groen met het testcommando uit de kop.
 - Openstaand: README, hub-sandbox-toepassing. Geen commit gemaakt.
+
+## Agenda: interface, onafhankelijkheid en isolatie
+- `agenda/tests/test_structuur.py` toegevoegd: controleert exact de zeven contractnamen in `__all__`, wildcard-export en imports van `agenda/__init__.py`. De publieke exports stonden al correct; geen productiecode gewijzigd.
+- AST-controle over alle Python-bestanden in `agenda/`, inclusief de tests zelf en imports binnen functies: alleen agenda en standaardbibliotheek toegestaan; relatieve imports mogen het pakket niet verlaten. Met standaardbibliotheekdetectie voor Python 3.9 en nieuwer.
+- Isolatietest kopieert uitsluitend `agenda/` (zonder bytecodecache) naar een tijdelijke map en start een subproces met `-I -S` vanuit een andere werkmap. Controleert afwezigheid van de repo-root op `sys.path`, de exacte gekopieerde `agenda.__file__`, concrete vrije tijden en een boeking via de publieke interface; de oorspronkelijke agenda blijft ongewijzigd.
+- Tests gebruiken geen netwerk, geheimen of omgevingsvariabelen. Validatie: `python3 -m unittest discover -s . -t . -p "test_*.py"`: alle 136 tests groen, inclusief de drie nieuwe tests; `git diff --check` groen.
+- Openstaand binnen deze taak: niets. Geen commit gemaakt.
