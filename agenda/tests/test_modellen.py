@@ -233,5 +233,28 @@ class MiddernachtTest(unittest.TestCase):
         controleer_binnen_een_dag(Boeking("b", "t", date(2027, 6, 5), date(2027, 6, 7)), "Europe/Brussels")
 
 
+class FoldVolgordeTest(unittest.TestCase):
+    """Dezelfde ZoneInfo: Python vergelijkt dan kloktijden zonder fold; vergelijk als absolute tijd."""
+
+    # 31 oktober 2027, Brussel: 02:15 komt twee keer voor (fold=0 CEST, fold=1 CET)
+    EERSTE = datetime(2027, 10, 31, 2, 15, tzinfo=BXL)
+    TWEEDE = datetime(2027, 10, 31, 2, 15, fold=1, tzinfo=BXL)
+    LATER = datetime(2027, 10, 31, 2, 45, tzinfo=BXL)  # fold=0: ligt vóór TWEEDE
+
+    def test_boeking_omgekeerd_wordt_geweigerd(self):
+        with self.assertRaises(AgendaFout):
+            Boeking("b", "m", self.TWEEDE, self.LATER)
+
+    def test_boeking_over_herfstovergang_is_geldig(self):
+        Boeking("b", "m", self.LATER, self.TWEEDE)
+
+    def test_afwezig_omgekeerd_wordt_geweigerd(self):
+        with self.assertRaises(AgendaFout):
+            medewerker(afwezig=[(self.TWEEDE, self.LATER)])
+
+    def test_afwezig_over_herfstovergang_is_geldig(self):
+        medewerker(afwezig=[(self.LATER, self.TWEEDE)])
+
+
 if __name__ == "__main__":
     unittest.main()

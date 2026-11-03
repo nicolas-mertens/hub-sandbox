@@ -5,7 +5,7 @@ ValueError. Collecties worden diep gekopieerd naar tuples of MappingProxyType.
 """
 
 from dataclasses import dataclass
-from datetime import date, datetime, time, timedelta
+from datetime import date, datetime, time, timedelta, timezone
 from types import MappingProxyType
 from typing import Any, List, Tuple
 from zoneinfo import ZoneInfo
@@ -25,6 +25,11 @@ def _aware(waarde: Any, veld: str) -> datetime:
     if waarde.tzinfo is None or waarde.utcoffset() is None:
         raise AgendaFout("%s moet een aware datetime zijn" % veld)
     return waarde
+
+
+def _einde_na_start(start: datetime, einde: datetime) -> bool:
+    # Bij dezelfde ZoneInfo vergelijkt Python kloktijden zonder fold; reken in UTC.
+    return einde.astimezone(timezone.utc) > start.astimezone(timezone.utc)
 
 
 def _dag(waarde: Any, veld: str) -> date:
@@ -108,7 +113,7 @@ class Medewerker:
             start, einde = _paar(item, "afwezig")
             start = _aware(start, "afwezig start")
             einde = _aware(einde, "afwezig einde")
-            if einde <= start:
+            if not _einde_na_start(start, einde):
                 raise AgendaFout("afwezig: einde moet na start liggen")
             afwezig.append((start, einde))
         _vast(self, "afwezig", tuple(afwezig))
@@ -149,7 +154,7 @@ class Boeking:
         if isinstance(self.start, datetime) or isinstance(self.einde, datetime):
             start = _aware(self.start, "start")
             einde = _aware(self.einde, "einde")
-            if einde <= start:
+            if not _einde_na_start(start, einde):
                 raise AgendaFout("einde moet na start liggen")
         else:
             start = _dag(self.start, "start")
