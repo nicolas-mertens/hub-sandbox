@@ -111,3 +111,6 @@
 - Grensdatums: eerst `GrensDatumAgendaTest` (rood: `OverflowError` uit `boek`, `is_vrij`, constructor, `vrije_tijden` op `date.min`/`date.max`). Herstel in `agenda/agenda.py`: tijdstippen worden als geheel getal (microseconden, `_utc_sleutel` uit `modellen.py`) vergeleken in plaats van via `astimezone(UTC)`; omzettingen naar `Agenda.tz` die buiten het bereik vallen geven `AgendaFout`. Een boeking die niet naar `Agenda.tz` omgezet kan worden, geeft dus `AgendaFout` (ook bij `is_vrij`), geen `False`.
 - Aansluitende werktijdvakken: besloten NIET samen te voegen. Reden: het masterplan zegt "Een boeking mag meerdere werktijdvakken niet overspannen" en de rekenregel is per werktijdvak; samenvoegen zou het contract wijzigen (stopvoorwaarde c). Vastgelegd in `AansluitendeVakkenTest` en in de README.
 - 151 tests groen met het testcommando uit de kop. Geen commit gemaakt.
+
+## agenda vervolg: review ronde 1 (is_vrij op grensdatums)
+- Bevinding P1: `GrensDatumAgendaTest.test_is_vrij` accepteerde `AgendaFout` én `False`. Aangescherpt tot `assertRaises(AgendaFout)` voor beide grensgevallen. De test was niet rood te krijgen: de code gooit al `AgendaFout` (zie vorige sectie), dus alleen de test is strenger geworden; productiecode ongewijzigd.

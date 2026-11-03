@@ -311,7 +311,8 @@ class GrensDatumAgendaTest(unittest.TestCase):
     def test_is_vrij(self):
         for start, einde in self.gevallen():
             with self.subTest(start=start):
-                self.assertIn(self.antwoord(lambda: self.agenda().is_vrij("m1", start, einde)), (None, False))
+                with self.assertRaises(AgendaFout):
+                    self.agenda().is_vrij("m1", start, einde)
 
     def test_constructor(self):
         for start, einde in self.gevallen():
