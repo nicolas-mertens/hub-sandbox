@@ -95,3 +95,14 @@
 - Isolatietest kopieert uitsluitend `agenda/` (zonder bytecodecache) naar een tijdelijke map en start een subproces met `-I -S` vanuit een andere werkmap. Controleert afwezigheid van de repo-root op `sys.path`, de exacte gekopieerde `agenda.__file__`, concrete vrije tijden en een boeking via de publieke interface; de oorspronkelijke agenda blijft ongewijzigd.
 - Tests gebruiken geen netwerk, geheimen of omgevingsvariabelen. Validatie: `python3 -m unittest discover -s . -t . -p "test_*.py"`: alle 136 tests groen, inclusief de drie nieuwe tests; `git diff --check` groen.
 - Openstaand binnen deze taak: niets. Geen commit gemaakt.
+
+## agenda: README en toepassing in hub-sandbox
+- `agenda/README.md`: interface, intervallen per type, zomertijd (met lentegat), stappenraster, foutentabel, versie 1.0, wijzigingsregel en verhuispad (`git subtree split`, `pyproject.toml` 1.0.0). Claimt alleen Python 3.11 (gedraaid op 3.11.2, zie `agenda/OMGEVING.md`); 3.9 staat er als ontwerpdoel, niet als claim.
+- `agenda/tests/test_readme.py` haalt het codeblok uit de README en voert het uit.
+- `vrije_momenten.py` (root): kleine toepassing met `from agenda import ...`, verzonnen namen en `.test`-adressen; `python3 vrije_momenten.py` drukt vrije momenten af. Test: `tests/test_vrije_momenten.py` (staat in `tests/`, zodat ook de CI die vindt).
+- Testcommando uit de kop: 140 tests groen. Bestaande hub-sandbox-code ongewijzigd. De CI draait alleen `tests/` en dus niet `agenda/tests/`; dat is niet aangepast (buiten scope), eigenaar kan beslissen.
+- Openstaand: niets. Geen commit gemaakt.
+
+## agenda: review ronde 1 (lentegat in README)
+- Bevinding: README beweerde dat een werktijd in het lentegat naar de dichtstbijzijnde bestaande tijd schuift; echt gedrag (`fold=0`) behoudt de offset van vóór de overgang (02:50 wordt 03:50 CEST). README aangepast; code ongewijzigd (contract noemt `fold=0`).
+- Tests: `test_lente_werktijd_begint_in_het_gat` (gedrag vastgelegd) en `test_readme_beschrijft_lentegat_zoals_het_werkt` (faalde eerst). 142 tests groen. Geen commit gemaakt.

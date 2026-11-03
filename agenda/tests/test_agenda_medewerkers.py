@@ -219,6 +219,12 @@ class ZomertijdTest(unittest.TestCase):
         self.assertEqual([t.utcoffset() for t in resultaat],
                          [timedelta(hours=1), timedelta(hours=2)])
 
+    def test_lente_werktijd_begint_in_het_gat(self):
+        # 02:50 bestaat niet; fold=0 gebruikt de offset van vóór de overgang (+01:00): 03:50 CEST.
+        m = Medewerker(id="m1", naam="An", werktijden={6: [(time(2, 50), time(4))]})
+        resultaat = Agenda([m]).vrije_tijden("m1", LENTE, 10, 10)
+        self.assertEqual(uren(resultaat), [(3, 50)])
+
     def test_lente_boeking_over_gat(self):
         agenda = Agenda([self.medewerker(LENTE)])
         start, einde = dt(1, 30, LENTE), dt(3, 30, LENTE)
